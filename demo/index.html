@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leitor de documentos — demo</title>
+<style>
+  :root {
+    --fundo: #f5f4f0; --cartao: #ffffff; --texto: #1d1d1b; --suave: #6b6a65;
+    --borda: #e3e1da; --destaque: #2f5d50; --destaque-claro: #e3eee9;
+    --alerta: #9a5b13; --alerta-claro: #fbf0e1; --erro: #a33a2b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fundo: #161615; --cartao: #1f1f1d; --texto: #ecebe6; --suave: #9c9b95;
+      --borda: #33322f; --destaque: #7fbfa9; --destaque-claro: #22332d;
+      --alerta: #e0a65a; --alerta-claro: #33291c; --erro: #e07a6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--texto);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 48px 20px 80px; }
+  header h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--suave); }
+  .controles { display: flex; gap: 12px; align-items: center; margin: 28px 0 14px; flex-wrap: wrap; }
+  .controles label { color: var(--suave); font-size: 14px; }
+  select {
+    font: inherit; padding: 6px 10px; border-radius: 8px;
+    border: 1px solid var(--borda); background: var(--cartao); color: var(--texto);
+  }
+  #zona {
+    border: 2px dashed var(--borda); border-radius: 16px; background: var(--cartao);
+    padding: 48px 20px; text-align: center; cursor: pointer; transition: .15s;
+  }
+  #zona:hover, #zona.arrastando { border-color: var(--destaque); background: var(--destaque-claro); }
+  #zona strong { display: block; font-size: 17px; margin-bottom: 4px; }
+  #zona span { color: var(--suave); font-size: 14px; }
+  .resultado {
+    background: var(--cartao); border: 1px solid var(--borda); border-radius: 16px;
+    padding: 24px; margin-top: 20px;
+  }
+  .topo { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .arquivo { color: var(--suave); font-size: 13px; word-break: break-all; }
+  .tipo { font-size: 24px; font-weight: 650; margin: 2px 0 0; letter-spacing: -0.01em; }
+  .tipo.outro { color: var(--suave); }
+  .confianca { min-width: 180px; }
+  .confianca .rotulo { display: flex; justify-content: space-between; font-size: 13px; color: var(--suave); }
+  .barra { height: 8px; background: var(--borda); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+  .barra div { height: 100%; background: var(--destaque); border-radius: 99px; transition: width .4s; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 0; }
+  .etiqueta {
+    font-size: 12.5px; padding: 3px 10px; border-radius: 99px;
+    background: var(--fundo); border: 1px solid var(--borda); color: var(--suave);
+  }
+  .aviso {
+    margin-top: 16px; padding: 10px 14px; border-radius: 10px; font-size: 14px;
+    background: var(--alerta-claro); color: var(--alerta);
+  }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); margin: 24px 0 10px; font-weight: 600; }
+  .sinais { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sinal { font-size: 13px; padding: 3px 10px; border-radius: 6px; background: var(--destaque-claro); color: var(--destaque); }
+  .campos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .campo { border: 1px solid var(--borda); border-radius: 10px; padding: 10px 12px; }
+  .campo .nome { font-size: 12px; color: var(--suave); }
+  .campo .valor { font-variant-numeric: tabular-nums; font-size: 14px; word-break: break-word; }
+  .campo.alerta { border-color: var(--alerta); background: var(--alerta-claro); }
+  .campo.alerta .valor { color: var(--alerta); font-weight: 600; }
+  .ok { color: var(--destaque); font-size: 12px; margin-left: 4px; }
+  .controles .opcao { display: flex; align-items: center; gap: 6px; }
+  .vazio { color: var(--suave); font-size: 14px; }
+  details summary { cursor: pointer; color: var(--suave); font-size: 14px; margin-top: 22px; }
+  pre {
+    white-space: pre-wrap; word-break: break-word; background: var(--fundo); border-radius: 10px;
+    padding: 14px; font-size: 12.5px; max-height: 360px; overflow: auto; margin: 10px 0 0;
+  }
+  .carregando { display: flex; align-items: center; gap: 12px; color: var(--suave); }
+  .girando {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--borda);
+    border-top-color: var(--destaque); animation: gira .8s linear infinite;
+  }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .erro { color: var(--erro); }
+  footer { margin-top: 40px; color: var(--suave); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Leitor de documentos</h1>
+    <p>Envie um PDF ou foto de documento: o motor lê o texto (direto do PDF ou por OCR), identifica o tipo entre 35 e extrai os dados — CPF e nº da CNH conferidos pelo dígito verificador, filiação, validade, proprietários e garantia da matrícula, renda do holerite. Tudo roda localmente, sem IA.</p>
+  </header>
+
+  <div class="controles">
+    <label for="ocr">Motor de OCR</label>
+    <select id="ocr">
+      <option value="tesseract">Tesseract (mais rápido)</option>
+      <option value="auto">Automático (Paddle só quando compensa)</option>
+      <option value="paddle">PaddleOCR (mais preciso)</option>
+    </select>
+    <label class="opcao"><input type="checkbox" id="consultas" checked> Completar endereço e cidade (CEP e IBGE)</label>
+  </div>
+
+  <div id="zona" tabindex="0" role="button" aria-label="Escolher documento">
+    <strong>Arraste um documento aqui</strong>
+    <span>ou clique para escolher — PDF, PNG, JPG ou WEBP, até 25 MB</span>
+    <input id="arquivo" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" hidden multiple>
+  </div>
+
+  <div id="resultados"></div>
+
+  <footer>Demo do <code>leitor-documentos</code> · TypeScript · pdf.js · Tesseract · PaddleOCR</footer>
+</main>
+
+<script>
+const METODOS = {
+  texto_pdf: "Texto direto do PDF",
+  ocr_imagem_pdf: "OCR da imagem dentro do PDF",
+  ocr_pagina_pdf: "OCR da página do PDF",
+  ocr_imagem: "OCR da imagem",
+  sem_texto: "Sem texto legível",
+  nao_suportado: "Formato não suportado",
+  protegido_por_senha: "PDF protegido por senha",
+  nome_arquivo: "Pelo nome do arquivo",
+  erro: "Erro na leitura",
+}
+
+const zona = document.getElementById("zona")
+const entrada = document.getElementById("arquivo")
+const resultados = document.getElementById("resultados")
+
+const escapar = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c])
+
+zona.addEventListener("click", () => entrada.click())
+zona.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") entrada.click() })
+entrada.addEventListener("change", () => { enviarTodos(entrada.files); entrada.value = "" })
+zona.addEventListener("dragover", (e) => { e.preventDefault(); zona.classList.add("arrastando") })
+zona.addEventListener("dragleave", () => zona.classList.remove("arrastando"))
+zona.addEventListener("drop", (e) => { e.preventDefault(); zona.classList.remove("arrastando"); enviarTodos(e.dataTransfer.files) })
+
+async function enviarTodos(arquivos) {
+  for (const arquivo of arquivos) await enviar(arquivo)
+}
+
+async function enviar(arquivo) {
+  const cartao = document.createElement("section")
+  cartao.className = "resultado"
+  cartao.innerHTML = `<div class="carregando"><div class="girando"></div>Lendo <strong>${escapar(arquivo.name)}</strong>…</div>`
+  resultados.prepend(cartao)
+
+  try {
+    const ocr = document.getElementById("ocr").value
+    const consultas = document.getElementById("consultas").checked ? 1 : 0
+    const resposta = await fetch(`/api/ler?ocr=${ocr}&consultas=${consultas}`, {
+      method: "POST",
+      headers: { "x-nome-arquivo": encodeURIComponent(arquivo.name), "content-type": arquivo.type || "application/octet-stream" },
+      body: arquivo,
+    })
+    const dados = await resposta.json()
+    if (!resposta.ok) throw new Error(dados.erro || "Falha na leitura")
+    cartao.innerHTML = desenhar(dados)
+  } catch (erro) {
+    cartao.innerHTML = `<p class="erro">Não foi possível ler <strong>${escapar(arquivo.name)}</strong>: ${escapar(erro.message)}</p>`
+  }
+}
+
+function desenhar(d) {
+  const pct = Math.round(d.confianca * 100)
+  const etiquetas = [
+    METODOS[d.metodo] || d.metodo,
+    d.ocr ? `OCR: ${d.ocr}` : null,
+    `${d.segundos.toFixed(1)} s`,
+    `${(d.tamanhoBytes / 1024).toFixed(0)} KB`,
+    `${d.texto.length.toLocaleString("pt-BR")} caracteres lidos`,
+    d.tipoPeloNome ? "tipo confirmado pelo nome do arquivo" : null,
+  ].filter(Boolean)
+
+  const campos = d.campos
+    .map((c) => `<div class="campo${c.alerta ? " alerta" : ""}"><div class="nome">${escapar(c.rotulo)}${c.conferido ? '<span class="ok" title="Conferido (dígito verificador ou base pública)">✓ conferido</span>' : ""}</div><div class="valor">${escapar(c.valor)}</div></div>`)
+    .join("")
+
+  return `
+    <div class="topo">
+      <div>
+        <div class="arquivo">${escapar(d.arquivo)}</div>
+        <p class="tipo ${d.tipo === "outro" ? "outro" : ""}">${escapar(d.nomeTipo)}</p>
+      </div>
+      <div class="confianca">
+        <div class="rotulo"><span>Confiança</span><span>${pct}%</span></div>
+        <div class="barra"><div style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="meta">${etiquetas.map((e) => `<span class="etiqueta">${escapar(e)}</span>`).join("")}</div>
+    ${d.nomeTipoPeloConteudo ? `<div class="aviso">O nome do arquivo diz <strong>${escapar(d.nomeTipo)}</strong>, mas o conteúdo parece <strong>${escapar(d.nomeTipoPeloConteudo)}</strong>.</div>` : ""}
+    <h3>Sinais que identificaram o tipo</h3>
+    ${d.sinais.length ? `<div class="sinais">${d.sinais.map((s) => `<span class="sinal">${escapar(s)}</span>`).join("")}</div>` : `<p class="vazio">Nenhum sinal encontrado.</p>`}
+    <h3>Dados encontrados</h3>
+    ${campos ? `<div class="campos">${campos}</div>` : `<p class="vazio">Nenhum dado encontrado no texto.</p>`}
+    ${d.texto ? `<details><summary>Ver texto extraído</summary><pre>${escapar(d.texto)}</pre></details>` : ""}
+  `
+}
+</script>
+</body>
+</html>

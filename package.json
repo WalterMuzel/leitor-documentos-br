@@ -1,0 +1,52 @@
+{
+  "name": "leitor-documentos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Motor de leitura local de documentos (OCR/Tesseract, sem IA) para classificar documentos de crédito imobiliário.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "demo": "tsx demo/servidor.ts",
+    "testar": "tsx examples/testar.ts",
+    "checar-extracao": "tsx examples/checar-extracao.ts",
+    "testar-lote": "tsx examples/testar-lote.ts",
+    "gerar-fixture": "node scripts/gerar-fixture-pdf.mjs",
+    "baixar-modelos-paddle": "node scripts/baixar-modelos-paddle.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^6.3.289",
+    "tesseract.js": "^7.0.0"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas": "^1.0.0",
+    "onnxruntime-node": "1.30.0",
+    "ppu-paddle-ocr": "6.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "pdf-lib": "^1.17.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "tesseract.js@7.0.0": true,
+    "onnxruntime-node@1.30.0": false
+  }
+}

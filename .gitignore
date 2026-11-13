@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+*.traineddata
+
+# Fixtures com documentos reais/sensiveis - nunca versionar
+fixtures/*
+!fixtures/.gitkeep
+!fixtures/exemplo-*.pdf
+
+# Modelos do PaddleOCR (npm run baixar-modelos-paddle)
+modelos/
